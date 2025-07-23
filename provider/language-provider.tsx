@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Locale, defaultLocale, getBrowserLocale, t as translateFunction, TranslationKey } from '@/lib/i18n';
+import { Locale, defaultLocale, getBrowserLocale, t as translateFunction } from '@/lib/i18n';
 
 interface LanguageContextType {
   locale: Locale;
@@ -63,9 +63,7 @@ export function useLanguage() {
 export function useTranslation() {
   const { locale } = useLanguage();
   
-  const t = (key: TranslationKey): string => {
-    return translateFunction(key, locale);
-  };
+  const t = translateFunction(locale);
 
   return { t, locale };
 } 

@@ -8,12 +8,12 @@ export function LayoutMetadata() {
   
   useEffect(() => {
     // Update document title
-    document.title = t("layout.title");
+    document.title = t.layout.title;
     
     // Update meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', t("layout.description"));
+      metaDescription.setAttribute('content', t.layout.description);
     }
   }, [t]);
 

@@ -33,7 +33,7 @@ export function LanguagePicker() {
           className="gap-2 border"
         >
           <Globe className="h-4 w-4" />
-          <span className="text-sm">{t('footer.language')}</span>
+          <span className="text-sm">{t.footer.language}</span>
           <span className="text-sm font-medium">{getLocaleDisplayName(locale)}</span>
         </Button>
       </DropdownMenuTrigger>
