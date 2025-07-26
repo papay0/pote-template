@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/provider/language-provider";
 import { LayoutMetadata } from "@/components/layout-metadata";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +33,10 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <LayoutMetadata />
-            {children}
+            <AnalyticsProvider websiteId={process.env.NEXT_PUBLIC_WEBSITE_ID || ""}>
+              <LayoutMetadata />
+              {children}
+            </AnalyticsProvider>
           </ThemeProvider>
         </LanguageProvider>
       </body>
