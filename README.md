@@ -266,40 +266,102 @@ footer: {
     └── language-provider.tsx # Language context
 ```
 
-## SEO Optimization
+## SEO Strategy for AI Agents
 
-This template includes comprehensive SEO optimizations:
+### **🎨 Creative Freedom + Technical Rules**
 
-### Search Engine Optimization
-- **Structured Data (JSON-LD)**: Organization, LocalBusiness, WebSite, FAQ, and Breadcrumb schemas
-- **Meta Tags**: Dynamic titles, descriptions, keywords, and Open Graph tags
-- **Sitemap**: Auto-generated XML sitemap with language variations
-- **Robots.txt**: Configured for optimal crawling with AI bot allowances
-- **Canonical URLs**: Proper canonicalization and hreflang tags
+**✅ YOU CAN CUSTOMIZE EVERYTHING:**
+- Transform this into ANY business type (pizzeria, law firm, dentist, salon, etc.)
+- Update pages, content, design, colors, layout as needed
+- Add/remove sections, modify services, change the entire business focus
+- Create industry-specific content (menu items, legal services, medical procedures, etc.)
 
-### AI/LLM Optimization
-- **llms.txt**: AI-readable site summary at `/llms.txt` for better LLM understanding
-- **Structured content**: Clear hierarchy and semantic markup for AI comprehension
+**🚨 BUT ALWAYS FOLLOW THESE RULES:**
 
-### Technical SEO
-- **Web App Manifest**: PWA-ready configuration
-- **Performance**: Font display swap, optimized loading
-- **Accessibility**: ARIA labels, semantic HTML5 elements
-- **Mobile-first**: Responsive design with proper viewport settings
+1. **Translation System (CRITICAL):** 
+   - MUST update BOTH `en.ts` AND `fr.ts` with identical structure
+   - Build WILL FAIL if translations don't match the TypeScript interface
+   - Add new translation keys to `lib/i18n/types.ts` first, then both language files
 
-### Social Media
-- **Open Graph**: Facebook, LinkedIn sharing optimization
-- **Twitter Cards**: Optimized Twitter sharing with large images
-- **Rich Snippets**: Enhanced search result appearance
+2. **SEO Requirements:**
+   - Update ALL instances of "ABC Business Solutions" and placeholder content
+   - Change domain from `example.com` to real domain in structured data
+   - Keep the metadata export pattern in each page file
 
-## Best Practices
+3. **File Structure:**
+   - Don't rename core files (`robots.ts`, `sitemap.ts`, `manifest.ts`)
+   - Keep the client/server component pattern for pages with metadata
 
-1. **Always add translations** to both language files when adding new text
-2. **Use semantic HTML** for better SEO and accessibility
-3. **Track meaningful events** that provide business insights
-4. **Test on mobile devices** to ensure responsive design works
-5. **Keep the footer copyright year dynamic** using JavaScript
-6. **Add proper images** to `/public/` directory (see `.gitkeep` for requirements)
-7. **Update URLs** in structured data files to match your domain
+### **🎯 What to Update When Creating a New Business Website:**
 
-This template provides a professional, SEO-optimized foundation for small business websites with all essential features built-in.
+#### **1. Business Information (Required)**
+Update these files with actual business details:
+
+**`lib/i18n/en.ts` and `lib/i18n/fr.ts`:**
+```typescript
+brand: {
+  name: "Your Actual Business Name",
+  description: "Your actual business description"
+},
+footer: {
+  address: "Real business address",
+  phone: "Real phone number", 
+  email: "Real email address",
+  // Update business hours to match actual hours
+}
+```
+
+**`public/llms.txt`:** Replace ALL placeholder content with real business info
+- Business name, services, contact details
+- Accurate address and hours
+- Real description of what the business does
+
+#### **2. Domain & SEO Settings (Required)**
+**`lib/structured-data.ts`:** Change ALL `https://example.com` to actual domain
+**`lib/metadata.ts`:** Update `siteUrl` with real domain
+**`.env`:** Add `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`
+
+#### **3. Page Content (Required)**
+Update all business-specific content in translation files:
+- Services descriptions to match actual services
+- FAQ questions/answers relevant to the business
+- Contact form messages and success text
+
+#### **4. Page Metadata (Required)**
+Each page exports metadata - update titles/descriptions in:
+- `app/page.tsx` - Home page metadata
+- `app/contact/page.tsx` - Contact page metadata  
+- `app/faq/page.tsx` - FAQ page metadata
+
+#### **5. Social Media (Optional)**
+**`lib/metadata.ts`:** Update Twitter handle from `@abcbusiness` to real handle
+
+#### **6. Images (Required for Production)**
+Add these files to `/public/` directory:
+- `favicon.ico`, `apple-touch-icon.png` 
+- `og-image.png` (1200x630) for social sharing
+- Business logo and photos
+
+### **🔄 SEO Files That Update Automatically:**
+These files are generated automatically and need NO changes:
+- `/robots.txt` - Auto-generated from `app/robots.ts`
+- `/sitemap.xml` - Auto-generated from `app/sitemap.ts`  
+- `/manifest.webmanifest` - Auto-generated from `app/manifest.ts`
+
+### **🎯 Quick Checklist for AI Agents:**
+1. ✅ **Customize the business** (pizzeria, lawyer, etc.) - content, design, pages
+2. ✅ **Update translations** - BOTH `en.ts` AND `fr.ts` with identical structure
+3. ✅ **Replace ALL placeholder content** - business name, services, contact info
+4. ✅ **Update `public/llms.txt`** with real business details
+5. ✅ **Change `example.com`** to real domain in structured data files
+6. ✅ **Update page metadata** titles/descriptions for the new business type
+7. ✅ **Add business images** to `/public/` directory
+8. ✅ **Test build** with `npm run build` to ensure translations are valid
+9. ✅ **Verify SEO files** by visiting `/robots.txt`, `/sitemap.xml`, `/llms.txt`
+
+### **🚫 Don't Touch These Files:**
+- `app/robots.ts`, `app/sitemap.ts`, `app/manifest.ts` - Already optimized
+- SEO component files - Already configured
+- Structured data schemas - Already set up correctly
+
+**The template is fully SEO-optimized. Just update the business content!**
