@@ -192,6 +192,7 @@ The SDK automatically tracks:
 - Prevents analytics pollution from crawlers
 
 #### Automatic Event Tracking
+- **Page impressions** - Logged on every route change with appropriate source
 - Phone number clicks (`tel:` links)
 - Email clicks (`mailto:` links)
 - Form submissions
@@ -228,6 +229,8 @@ import { Source, EventType } from '@/lib/analytics-types';
   Hero Banner
 </div>
 ```
+
+**Note**: Page impressions are now **automatically tracked** on route changes. The system will log a `page_impression` event with the appropriate source every time a user navigates to a new page.
 
 ## Privacy & Security
 

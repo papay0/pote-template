@@ -330,6 +330,14 @@ const impressions = await db
   .collection(`analytics/${websiteId}/events`)
   .where('type', '==', 'impression')
   .get();
+
+// Get page navigation flow (route changes)
+const pageImpressions = await db
+  .collection(`analytics/${websiteId}/events`)
+  .where('eventType', '==', 'page_impression')
+  .where('timestamp', '>=', thirtyDaysAgo)
+  .orderBy('timestamp')
+  .get();
 ```
 
 ## Dashboard Metrics to Display

@@ -20,7 +20,8 @@ export enum Source {
   SearchResults = 'search_results',
   Dashboard = 'dashboard',
   ProfilePage = 'profile_page',
-  SettingsPage = 'settings_page'
+  SettingsPage = 'settings_page',
+  Unknown = 'unknown'
 }
 
 // Event type enum - the type of interaction
