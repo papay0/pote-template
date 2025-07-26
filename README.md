@@ -1,14 +1,42 @@
-# Pote AI Website Template
+# Small Business Website Template
 
-This is a [Next.js](https://nextjs.org) template designed for AI-generated business websites with built-in internationalization and analytics tracking.
+A modern, responsive Next.js template designed for small business websites with built-in internationalization, analytics tracking, and dark mode support.
 
 ## Features
 
-- 🌍 **Type-safe Internationalization** - Compile-time validated translations
-- 📊 **Firebase Analytics** - Automatic visitor and business action tracking
+- 🌍 **Type-safe Internationalization** - Compile-time validated translations (English/French)
+- 📊 **Firebase Analytics** - Automatic visitor tracking and business action analytics
 - 🎨 **shadcn/ui Components** - Modern, accessible UI components
-- 🌙 **Dark Mode** - Theme switching with next-themes
-- 📱 **Responsive Design** - Mobile-first responsive layout
+- 🌙 **Dark Mode** - Theme toggle in the header
+- 🌐 **Language Switcher** - Located in the footer for easy access
+- 📱 **Responsive Design** - Mobile-first with hamburger menu
+- 📄 **Pre-built Pages** - Home, Contact, and FAQ pages ready to use
+
+## Template Structure
+
+### Pages
+
+1. **Home Page** (`/`)
+   - Hero section with call-to-action buttons
+   - Services showcase (3 service cards)
+   - About section with contact buttons
+
+2. **Contact Page** (`/contact`)
+   - Contact information cards:
+     - Address with map icon
+     - Phone with click-to-call
+     - Email with click-to-email
+     - Business hours
+
+3. **FAQ Page** (`/faq`)
+   - Accordion-style questions and answers
+   - Call-to-action section at the bottom
+
+### Key Components
+
+- **Header** - Navigation menu with mobile hamburger and dark mode toggle
+- **Footer** - Business information, quick links, hours, and language switcher
+- **Mobile Menu** - Collapsible navigation for mobile devices
 
 ## Getting Started
 
@@ -19,7 +47,7 @@ This is a [Next.js](https://nextjs.org) template designed for AI-generated busin
 npm install
 ```
 
-2. Configure environment variables:
+2. Configure environment variables in `.env`:
 ```env
 # Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
@@ -43,18 +71,22 @@ Open [http://localhost:3000](http://localhost:3000) to see the result.
 
 ## Translation System
 
-### Adding New Languages
+The translation system is **compile-time validated**, ensuring no missing translations in production.
 
-1. **Update the TranslationProtocol interface** in `lib/i18n/index.ts`:
+### Structure
+
+Translation files are located in `lib/i18n/`:
+- `types.ts` - TranslationProtocol interface defining the structure
+- `en.ts` - English translations
+- `fr.ts` - French translations
+- `index.ts` - Main translation logic
+
+### Adding New Translations
+
+1. **Update the TranslationProtocol interface** in `lib/i18n/types.ts`:
 ```typescript
 export interface TranslationProtocol {
-  home: {
-    getStarted: string;
-    saveAndSee: string;
-    // Add new keys here
-    newKey: string;
-  };
-  // Add new sections here
+  // ... existing sections
   newSection: {
     title: string;
     description: string;
@@ -62,36 +94,24 @@ export interface TranslationProtocol {
 }
 ```
 
-2. **Add new language files** in `lib/i18n/`:
+2. **Add translations to all language files**:
 ```typescript
-// lib/i18n/es.ts
-export const es = {
-  home: {
-    getStarted: "Comienza editando",
-    saveAndSee: "Guarda y ve tus cambios al instante.",
-    newKey: "Nueva traducción"
-  },
+// lib/i18n/en.ts
+export const en = {
+  // ... existing translations
   newSection: {
-    title: "Título",
-    description: "Descripción"
+    title: "New Section",
+    description: "This is a new section"
   }
 } as const;
-```
 
-3. **Update the main i18n file**:
-```typescript
-// lib/i18n/index.ts
-import { es } from './es';
-
-export type Locale = 'en' | 'fr' | 'es'; // Add new locale
-
-// Validate new translation
-const _validateEs: TranslationProtocol = es;
-
-export const translations = {
-  en: _validateEn,
-  fr: _validateFr,
-  es: _validateEs, // Add new translation
+// lib/i18n/fr.ts
+export const fr = {
+  // ... existing translations
+  newSection: {
+    title: "Nouvelle Section",
+    description: "Ceci est une nouvelle section"
+  }
 } as const;
 ```
 
@@ -101,163 +121,157 @@ export const translations = {
 import { useTranslation } from '@/provider/language-provider';
 
 export default function MyComponent() {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   
   return (
     <div>
-      <h1>{t.home.getStarted}</h1>
-      <p>{t.newSection.description}</p>
-      <p>Current locale: {locale}</p>
+      <h1>{t.home.hero.title}</h1>
+      <p>{t.home.hero.subtitle}</p>
     </div>
   );
 }
 ```
 
-**Important**: The translation system is **compile-time validated**. If you add a key to the `TranslationProtocol` interface, you MUST add it to all language files or the build will fail. This ensures no missing translations in production.
-
 ## Analytics System
 
-### Basic Setup
+### Automatic Tracking
 
 The analytics system automatically tracks:
-- **Page impressions** - Logged on every URL change (including initial load)
-- Phone number clicks (`tel:` links)  
-- Email clicks (`mailto:` links)
-- Form submissions
-- External link clicks
+- **Page impressions** - Every page view (initial load and navigation)
+- **Phone clicks** - All `tel:` links
+- **Email clicks** - All `mailto:` links
+- **External link clicks**
 
 ### Manual Event Tracking
+
+The `useAnalytics` hook provides two functions:
 
 ```typescript
 import { useAnalytics } from '@/lib/useAnalytics';
 
-export default function ContactSection() {
-  const { logTap } = useAnalytics();
+export default function Component() {
+  const { logImpression, logTap } = useAnalytics();
   
+  // Log impression (usually automatic, but can be called manually)
+  useEffect(() => {
+    logImpression(); // Logs current page impression
+  }, []);
+  
+  // Log tap events for user interactions
   return (
-    <div>
-      {/* Automatic tracking - no code needed */}
-      <a href="tel:+1234567890">Call Now</a>
-      <a href="mailto:contact@business.com">Email Us</a>
-      
-      {/* Manual tap tracking */}
-      <button 
-        onClick={() => logTap('cta_click', { 
-          button: 'hero_cta',
-          value: 'get_started' 
-        })}
-      >
-        Get Started
-      </button>
-      
-      <button 
-        onClick={() => logTap('download_brochure', { 
-          document: 'company_brochure.pdf' 
-        })}
-      >
-        Download Brochure
-      </button>
-    </div>
+    <button 
+      onClick={() => logTap('hero_cta_click', { 
+        button: 'get_started',
+        page: 'home' 
+      })}
+    >
+      Get Started
+    </button>
   );
 }
 ```
 
-### Custom Event Types
+**Note**: Page impressions are tracked automatically by the `AnalyticsProvider` on route changes. You only need to call `logImpression()` manually for special cases like modal views or virtual pages.
 
-You can track any business-specific events:
+### Common Analytics Events
 
 ```typescript
-// Track appointment bookings
-logTap('appointment_booked', { 
-  service: 'consultation',
-  date: '2024-01-15',
-  value: 150 
-});
+// Service card clicks
+logTap('service_click', { service: 'consulting' });
 
-// Track quote requests
-logTap('quote_requested', { 
-  service: 'home_renovation',
-  location: 'kitchen' 
-});
+// FAQ interactions
+logTap('faq_question_click', { question: 'What services...', index: 0 });
 
-// Track social media clicks
-logTap('social_click', { 
-  platform: 'facebook'
-});
+// Contact actions
+logTap('contact_form_submit', formData);
+logTap('contact_phone_click', { phone: '+1234567890' });
+
+// Navigation
+logTap('mobile_menu_toggle', { action: 'open' });
 ```
 
-### Data Structure
+## Theme System
 
-Analytics data is stored in Firestore under `/analytics/{websiteId}/events` as a single collection:
+### Dark Mode Toggle
 
-```javascript
-{
-  eventId: string,        // Generated UUID
-  websiteId: string,      // Website UUID
-  type: 'impression' | 'tap',  // Event type
-  path: string,           // URL path (/contact, /, /about)
-  timestamp: timestamp,   // Event time
-  userAgent: string,      // Browser info
-  ipHash: string,         // Hashed IP for privacy
-  location: {
-    country: string,      // Detected country
-    city: string,         // Detected city  
-    timezone: string      // Browser timezone
-  },
-  device: {
-    type: 'mobile' | 'desktop' | 'tablet',
-    browser: string,      // Chrome, Firefox, etc.
-    os: string           // Windows, macOS, etc.
-  },
-  referrer: string,       // Where user came from
-  metadata: object        // Additional event data
+The dark mode toggle is located in the header. It uses `next-themes` for persistence across page reloads.
+
+### Language Switcher
+
+The language switcher is located in the footer. It automatically:
+- Detects browser language on first visit
+- Persists language choice in localStorage
+- Updates all text content instantly
+
+## Customization Guide
+
+### Updating Business Information
+
+1. **Company Name**: Update in `lib/i18n/en.ts` and `lib/i18n/fr.ts`:
+```typescript
+brand: {
+  name: "Your Business Name",
+  description: "Your business description"
 }
 ```
 
-## AI Agent Instructions
+2. **Contact Information**: Update in translation files:
+```typescript
+footer: {
+  address: "Your Address",
+  phone: "+1 (555) 123-4567",
+  email: "contact@yourbusiness.com",
+  hours: {
+    weekdays: "Mon - Fri: 9:00 AM - 6:00 PM",
+    weekends: "Sat - Sun: Closed"
+  }
+}
+```
 
-### For Website Generation:
+3. **Services**: Modify the services section in translation files
+4. **FAQ**: Update the questions array in translation files
 
-1. **Environment Variables**: Always set `NEXT_PUBLIC_WEBSITE_ID` to a unique UUID for each generated website
-2. **Translations**: Add business-specific content to the `TranslationProtocol` interface and all language files
-3. **Analytics**: Use `logTap(action, metadata)` for business actions - impressions are automatic
-4. **Components**: Build using shadcn/ui components for consistency
+### Adding New Pages
 
-### Translation Workflow:
-
-1. Define new keys in `TranslationProtocol` interface
-2. Add translations to all language files (`en.ts`, `fr.ts`, etc.)
-3. TypeScript will enforce completion - build fails if translations are missing
-4. Use `useTranslation()` hook to access translations in components
-
-### Analytics Integration:
-
-- Analytics automatically initializes via `AnalyticsProvider` in layout
-- Page impressions are tracked automatically on URL changes
-- Use `logTap(action, metadata)` for business actions
-- Common actions (phone, email, forms) are tracked automatically
+1. Create a new file in `app/[page-name]/page.tsx`
+2. Add navigation link in `components/header.tsx`
+3. Add translations for the new page in `lib/i18n/types.ts` and language files
 
 ## File Structure
 
 ```
 ├── app/
 │   ├── layout.tsx          # Root layout with providers
-│   └── page.tsx            # Home page
+│   ├── page.tsx            # Home page
+│   ├── contact/
+│   │   └── page.tsx        # Contact page
+│   └── faq/
+│       └── page.tsx        # FAQ page
 ├── components/
 │   ├── ui/                 # shadcn/ui components
-│   ├── analytics-provider.tsx # Analytics wrapper
+│   ├── analytics-provider.tsx
+│   ├── header.tsx          # Navigation header
+│   ├── footer.tsx          # Site footer
 │   └── language-picker.tsx # Language switcher
 ├── lib/
 │   ├── i18n/              # Translation system
+│   │   ├── types.ts       # TranslationProtocol interface
 │   │   ├── index.ts       # Main i18n logic
 │   │   ├── en.ts          # English translations
 │   │   └── fr.ts          # French translations
-│   ├── analytics.ts       # PoteAnalytics SDK
-│   ├── analytics-types.ts # EventType enum (impression/tap)
+│   ├── analytics.ts       # Analytics SDK
 │   ├── useAnalytics.ts    # Analytics React hook
 │   └── firebase.ts        # Firebase configuration
 └── provider/
     └── language-provider.tsx # Language context
 ```
 
-This template provides a solid foundation for AI-generated business websites with professional translation and analytics capabilities.
+## Best Practices
+
+1. **Always add translations** to both language files when adding new text
+2. **Use semantic HTML** for better SEO and accessibility
+3. **Track meaningful events** that provide business insights
+4. **Test on mobile devices** to ensure responsive design works
+5. **Keep the footer copyright year dynamic** using JavaScript
+
+This template provides a professional foundation for small business websites with all essential features built-in.

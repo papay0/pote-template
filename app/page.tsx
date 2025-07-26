@@ -1,113 +1,124 @@
 "use client";
 
-import Image from "next/image";
-
-import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { LanguagePicker } from "@/components/language-picker"
-import { useTranslation } from "@/provider/language-provider"
-import { useAnalytics } from "@/lib/useAnalytics"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/provider/language-provider";
+import { useAnalytics } from "@/lib/useAnalytics";
+import { Briefcase, Headphones, Laptop } from "lucide-react";
 
 export default function Home() {
   const { t } = useTranslation();
   const { logTap } = useAnalytics();
   
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            {t.home.getStarted} {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            {t.home.saveAndSee}
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="tel:+1234567890"
-            onClick={() => logTap('phone_click', { phone: '+1234567890' })}
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Call Business
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="mailto:contact@business.com"
-            onClick={() => logTap('email_click', { email: 'contact@business.com' })}
-          >
-            Email Business
-          </a>
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            {t.home.hero.title}
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            {t.home.hero.subtitle}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              asChild
+              onClick={() => logTap('hero_cta_click')}
+            >
+              <Link href="/contact">{t.home.hero.cta}</Link>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              asChild
+              onClick={() => logTap('hero_secondary_click')}
+            >
+              <Link href="/faq">{t.home.hero.secondary}</Link>
+            </Button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <ThemeToggle />
-        <LanguagePicker />
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          {t.footer.learn}
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          {t.footer.examples}
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          {t.footer.goToNextjs}
-        </a>
-      </footer>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-12">
+            {t.home.services.title}
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card>
+              <CardHeader className="text-center">
+                <Briefcase className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <CardTitle>{t.home.services.consulting.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center">
+                  {t.home.services.consulting.description}
+                </CardDescription>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="text-center">
+                <Laptop className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <CardTitle>{t.home.services.technology.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center">
+                  {t.home.services.technology.description}
+                </CardDescription>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="text-center">
+                <Headphones className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <CardTitle>{t.home.services.support.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center">
+                  {t.home.services.support.description}
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="bg-muted/50 py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+              {t.home.about.title}
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8">
+              {t.home.about.description}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild>
+                <a 
+                  href={`tel:${t.footer.phone}`}
+                  onClick={() => logTap('about_phone_click', { phone: t.footer.phone })}
+                >
+                  Call {t.footer.phone}
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a 
+                  href={`mailto:${t.footer.email}`}
+                  onClick={() => logTap('about_email_click', { email: t.footer.email })}
+                >
+                  Email {t.footer.email}
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

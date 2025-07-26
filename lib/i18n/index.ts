@@ -1,25 +1,6 @@
 import { en } from './en';
 import { fr } from './fr';
-
-// Define the strict translation protocol/interface
-export interface TranslationProtocol {
-  home: {
-    getStarted: string;
-    saveAndSee: string;
-    deployNow: string;
-    readDocs: string;
-  };
-  footer: {
-    learn: string;
-    examples: string;
-    goToNextjs: string;
-    language: string;
-  };
-  layout: {
-    title: string;
-    description: string;
-  };
-}
+import { TranslationProtocol } from './types';
 
 
 export type Locale = 'en' | 'fr';
