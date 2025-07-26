@@ -266,6 +266,32 @@ footer: {
     └── language-provider.tsx # Language context
 ```
 
+## SEO Optimization
+
+This template includes comprehensive SEO optimizations:
+
+### Search Engine Optimization
+- **Structured Data (JSON-LD)**: Organization, LocalBusiness, WebSite, FAQ, and Breadcrumb schemas
+- **Meta Tags**: Dynamic titles, descriptions, keywords, and Open Graph tags
+- **Sitemap**: Auto-generated XML sitemap with language variations
+- **Robots.txt**: Configured for optimal crawling with AI bot allowances
+- **Canonical URLs**: Proper canonicalization and hreflang tags
+
+### AI/LLM Optimization
+- **llms.txt**: AI-readable site summary at `/llms.txt` for better LLM understanding
+- **Structured content**: Clear hierarchy and semantic markup for AI comprehension
+
+### Technical SEO
+- **Web App Manifest**: PWA-ready configuration
+- **Performance**: Font display swap, optimized loading
+- **Accessibility**: ARIA labels, semantic HTML5 elements
+- **Mobile-first**: Responsive design with proper viewport settings
+
+### Social Media
+- **Open Graph**: Facebook, LinkedIn sharing optimization
+- **Twitter Cards**: Optimized Twitter sharing with large images
+- **Rich Snippets**: Enhanced search result appearance
+
 ## Best Practices
 
 1. **Always add translations** to both language files when adding new text
@@ -273,5 +299,7 @@ footer: {
 3. **Track meaningful events** that provide business insights
 4. **Test on mobile devices** to ensure responsive design works
 5. **Keep the footer copyright year dynamic** using JavaScript
+6. **Add proper images** to `/public/` directory (see `.gitkeep` for requirements)
+7. **Update URLs** in structured data files to match your domain
 
-This template provides a professional foundation for small business websites with all essential features built-in.
+This template provides a professional, SEO-optimized foundation for small business websites with all essential features built-in.

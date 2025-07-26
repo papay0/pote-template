@@ -7,21 +7,26 @@ import { LayoutMetadata } from "@/components/layout-metadata";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { PageStructuredData } from "@/components/page-structured-data";
+import { generatePageMetadata } from "@/lib/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: "ABC Business Solutions",
-  description: "Professional business solutions for your success",
-};
+export const metadata: Metadata = generatePageMetadata({
+  title: "Professional Business Solutions",
+  description: "Transform your business with our expert consulting, technology solutions, and 24/7 support. Contact us for tailored business solutions.",
+  keywords: ['business solutions', 'consulting', 'technology', '24/7 support', 'business growth', 'professional services'],
+});
 
 export default function RootLayout({
   children,
@@ -29,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -37,6 +42,7 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <AnalyticsProvider>
               <LayoutMetadata />
+              <PageStructuredData />
               <div className="min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-1">

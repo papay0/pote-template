@@ -12,11 +12,11 @@ export default function Home() {
   const { logTap } = useAnalytics();
   
   return (
-    <div className="flex flex-col">
+    <article className="flex flex-col">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20" aria-labelledby="hero-title">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+          <h1 id="hero-title" className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             {t.home.hero.title}
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
@@ -51,7 +51,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <Card>
               <CardHeader className="text-center">
-                <Briefcase className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <Briefcase className="w-12 h-12 mx-auto mb-4 text-primary" aria-hidden="true" />
                 <CardTitle>{t.home.services.consulting.title}</CardTitle>
               </CardHeader>
               <CardContent>
@@ -63,7 +63,7 @@ export default function Home() {
             
             <Card>
               <CardHeader className="text-center">
-                <Laptop className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <Laptop className="w-12 h-12 mx-auto mb-4 text-primary" aria-hidden="true" />
                 <CardTitle>{t.home.services.technology.title}</CardTitle>
               </CardHeader>
               <CardContent>
@@ -75,7 +75,7 @@ export default function Home() {
             
             <Card>
               <CardHeader className="text-center">
-                <Headphones className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <Headphones className="w-12 h-12 mx-auto mb-4 text-primary" aria-hidden="true" />
                 <CardTitle>{t.home.services.support.title}</CardTitle>
               </CardHeader>
               <CardContent>
@@ -119,6 +119,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </div>
+    </article>
   );
 }

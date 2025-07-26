@@ -1,0 +1,47 @@
+# ABC Business Solutions
+
+> Professional business solutions provider offering consulting, technology solutions, and 24/7 support to help businesses grow and succeed.
+
+## Overview
+
+ABC Business Solutions is a small business website template built with Next.js, featuring:
+- Multi-language support (English/French)
+- Dark mode capability
+- Analytics tracking for business insights
+- Mobile-responsive design
+- Contact information and business hours display
+
+## Services
+
+We offer three main services:
+1. **Business Consulting** - Strategic guidance to optimize operations and drive growth
+2. **Technology Solutions** - Modern tech solutions to streamline business processes
+3. **24/7 Support** - Round-the-clock assistance to keep businesses running smoothly
+
+## Key Pages
+
+- [Home](/) - Overview of services and company introduction
+- [Contact](/contact) - Business contact information, address, and hours
+- [FAQ](/faq) - Frequently asked questions about our services
+
+## Contact Information
+
+- **Phone**: +1 (555) 123-4567
+- **Email**: contact@abcbusiness.com
+- **Address**: 123 Business Street, Suite 100, City, ST 12345
+
+## Business Hours
+
+- **Weekdays**: Monday - Friday, 9:00 AM - 6:00 PM
+- **Weekends**: Saturday - Sunday, 10:00 AM - 4:00 PM
+
+## Technical Details
+
+This website is built using:
+- Next.js 15 with App Router
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Firebase Analytics for visitor tracking
+- Internationalization with compile-time validation
+
+The website automatically tracks visitor impressions and business-critical interactions like phone calls, email clicks, and form submissions.

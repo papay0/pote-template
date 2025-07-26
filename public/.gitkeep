@@ -1,0 +1,23 @@
+# SEO Assets Needed
+
+Add the following files to the /public directory for optimal SEO:
+
+## Favicon Files
+- favicon.ico (32x32)
+- favicon-16x16.png
+- favicon-32x32.png
+- apple-touch-icon.png (180x180)
+
+## Android Icons
+- android-chrome-192x192.png
+- android-chrome-512x512.png
+
+## Social Media Images
+- og-image.png (1200x630) - Open Graph image
+- twitter-image.png (1200x630) - Twitter card image
+
+## Business Images
+- logo.png - Company logo
+- business-image.jpg - Photo of business/office
+
+These files should be optimized for web delivery and properly sized for their respective uses.
