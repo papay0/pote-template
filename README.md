@@ -120,21 +120,19 @@ export default function MyComponent() {
 ### Basic Setup
 
 The analytics system automatically tracks:
-- Page views with scroll depth and time on page
-- Phone number clicks (`tel:` links)
+- **Page impressions** - Logged on every URL change (including initial load)
+- Phone number clicks (`tel:` links)  
 - Email clicks (`mailto:` links)
 - Form submissions
 - External link clicks
-- User sessions with device info
 
 ### Manual Event Tracking
 
 ```typescript
 import { useAnalytics } from '@/lib/useAnalytics';
-import { Source, EventType } from '@/lib/analytics-types';
 
 export default function ContactSection() {
-  const { logEvent } = useAnalytics(process.env.NEXT_PUBLIC_WEBSITE_ID || "");
+  const { logTap } = useAnalytics();
   
   return (
     <div>
@@ -142,9 +140,9 @@ export default function ContactSection() {
       <a href="tel:+1234567890">Call Now</a>
       <a href="mailto:contact@business.com">Email Us</a>
       
-      {/* Manual event tracking with enums */}
+      {/* Manual tap tracking */}
       <button 
-        onClick={() => logEvent('cta_click', Source.HeroSection, EventType.Tap, { 
+        onClick={() => logTap('cta_click', { 
           button: 'hero_cta',
           value: 'get_started' 
         })}
@@ -153,7 +151,7 @@ export default function ContactSection() {
       </button>
       
       <button 
-        onClick={() => logEvent('download_brochure', Source.ServicesPage, EventType.Tap, { 
+        onClick={() => logTap('download_brochure', { 
           document: 'company_brochure.pdf' 
         })}
       >
@@ -166,42 +164,55 @@ export default function ContactSection() {
 
 ### Custom Event Types
 
-You can track any business-specific events with structured enums:
+You can track any business-specific events:
 
 ```typescript
 // Track appointment bookings
-logEvent('appointment_booked', Source.ContactPage, EventType.Submit, { 
+logTap('appointment_booked', { 
   service: 'consultation',
   date: '2024-01-15',
   value: 150 
 });
 
 // Track quote requests
-logEvent('quote_requested', Source.ServicesPage, EventType.Submit, { 
+logTap('quote_requested', { 
   service: 'home_renovation',
   location: 'kitchen' 
 });
 
 // Track social media clicks
-logEvent('social_click', Source.Footer, EventType.Tap, { 
-  platform: 'facebook',
-  location: 'footer' 
-});
-
-// Track content impressions
-logEvent('testimonial_view', Source.HomeScreen, EventType.Impression, {
-  testimonialIndex: 2,
-  section: 'testimonials'
+logTap('social_click', { 
+  platform: 'facebook'
 });
 ```
 
 ### Data Structure
 
-Analytics data is stored in Firestore under `/analytics/{websiteId}/` with three sub-collections:
+Analytics data is stored in Firestore under `/analytics/{websiteId}/events` as a single collection:
 
-- **`sessions`** - User sessions with device info, location, referrer
-- **`pageviews`** - Individual page visits with time spent and scroll depth  
-- **`events`** - Business actions with source/type classification (phone calls, emails, form submissions, impressions)
+```javascript
+{
+  eventId: string,        // Generated UUID
+  websiteId: string,      // Website UUID
+  type: 'impression' | 'tap',  // Event type
+  path: string,           // URL path (/contact, /, /about)
+  timestamp: timestamp,   // Event time
+  userAgent: string,      // Browser info
+  ipHash: string,         // Hashed IP for privacy
+  location: {
+    country: string,      // Detected country
+    city: string,         // Detected city  
+    timezone: string      // Browser timezone
+  },
+  device: {
+    type: 'mobile' | 'desktop' | 'tablet',
+    browser: string,      // Chrome, Firefox, etc.
+    os: string           // Windows, macOS, etc.
+  },
+  referrer: string,       // Where user came from
+  metadata: object        // Additional event data
+}
+```
 
 ## AI Agent Instructions
 
@@ -209,7 +220,7 @@ Analytics data is stored in Firestore under `/analytics/{websiteId}/` with three
 
 1. **Environment Variables**: Always set `NEXT_PUBLIC_WEBSITE_ID` to a unique UUID for each generated website
 2. **Translations**: Add business-specific content to the `TranslationProtocol` interface and all language files
-3. **Analytics**: Use `logEvent(eventType, source, type, metadata)` for important business actions with proper enum classification
+3. **Analytics**: Use `logTap(action, metadata)` for business actions - impressions are automatic
 4. **Components**: Build using shadcn/ui components for consistency
 
 ### Translation Workflow:
@@ -222,9 +233,9 @@ Analytics data is stored in Firestore under `/analytics/{websiteId}/` with three
 ### Analytics Integration:
 
 - Analytics automatically initializes via `AnalyticsProvider` in layout
-- Use `useAnalytics()` hook for manual event tracking
-- Most common business actions are tracked automatically
-- Add custom events for business-specific actions
+- Page impressions are tracked automatically on URL changes
+- Use `logTap(action, metadata)` for business actions
+- Common actions (phone, email, forms) are tracked automatically
 
 ## File Structure
 
@@ -241,8 +252,8 @@ Analytics data is stored in Firestore under `/analytics/{websiteId}/` with three
 │   │   ├── index.ts       # Main i18n logic
 │   │   ├── en.ts          # English translations
 │   │   └── fr.ts          # French translations
-│   ├── analytics.ts       # Analytics SDK
-│   ├── analytics-types.ts # Source and EventType enums
+│   ├── analytics.ts       # PoteAnalytics SDK
+│   ├── analytics-types.ts # EventType enum (impression/tap)
 │   ├── useAnalytics.ts    # Analytics React hook
 │   └── firebase.ts        # Firebase configuration
 └── provider/

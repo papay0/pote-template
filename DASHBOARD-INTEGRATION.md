@@ -22,11 +22,39 @@ const db = admin.firestore();
 
 ## Data Structure Reference
 
-### Collection Paths
-- **Main Collection**: `/analytics/{websiteId}`
-- **Sessions**: `/analytics/{websiteId}/sessions/{sessionId}`
-- **Page Views**: `/analytics/{websiteId}/pageviews/{pageviewId}`
-- **Events**: `/analytics/{websiteId}/events/{eventId}`
+### Collection Path
+- **Single Collection**: `/analytics/{websiteId}/events`
+
+### Event Data Structure
+```javascript
+{
+  eventId: string,              // Generated UUID
+  websiteId: string,            // Website UUID  
+  type: 'impression' | 'tap',   // Event type
+  path: string,                 // URL path (/contact, /, /about)
+  timestamp: timestamp,         // Event time
+  userAgent: string,            // Full browser user agent
+  ipHash: string,               // Hashed IP for privacy
+  location: {
+    country: string,            // Detected via ipapi.co
+    city: string,               // Detected via ipapi.co
+    timezone: string            // Browser timezone
+  },
+  device: {
+    type: 'mobile' | 'desktop' | 'tablet',
+    browser: string,            // Chrome, Firefox, Safari, Edge
+    os: string                  // Windows, macOS, iOS, Android
+  },
+  referrer: string,             // Document referrer or 'direct'
+  metadata: {                   // Custom event data
+    action?: string,            // For taps: 'phone_click', 'email_click', etc.
+    isInitialLoad?: boolean,    // For impressions: true on first page load
+    phone?: string,             // Phone number for phone_click events
+    email?: string,             // Email for email_click events
+    // Any other custom fields...
+  }
+}
+```
 
 ### Key Analytics Queries
 
@@ -37,32 +65,32 @@ async function getBasicMetrics(websiteId: string) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Total unique visitors (sessions)
-  const sessionsSnapshot = await db
-    .collection(`analytics/${websiteId}/sessions`)
-    .where('startTime', '>=', thirtyDaysAgo)
-    .get();
-  const uniqueVisitors = sessionsSnapshot.size;
-
-  // Total page views
-  const pageViewsSnapshot = await db
-    .collection(`analytics/${websiteId}/pageviews`)
-    .where('timestamp', '>=', thirtyDaysAgo)
-    .get();
-  const totalPageViews = pageViewsSnapshot.size;
-
-  // Total events
+  // Get all events from last 30 days
   const eventsSnapshot = await db
     .collection(`analytics/${websiteId}/events`)
     .where('timestamp', '>=', thirtyDaysAgo)
     .get();
-  const totalEvents = eventsSnapshot.size;
+
+  const events = eventsSnapshot.docs.map(doc => doc.data());
+  
+  // Count impressions (page views)
+  const impressions = events.filter(event => event.type === 'impression');
+  const totalPageViews = impressions.length;
+  
+  // Count taps (business actions)
+  const taps = events.filter(event => event.type === 'tap');
+  const totalActions = taps.length;
+  
+  // Estimate unique visitors from unique IP hashes
+  const uniqueIPs = new Set(events.map(event => event.ipHash));
+  const uniqueVisitors = uniqueIPs.size;
 
   return {
     uniqueVisitors,
     totalPageViews,
-    totalEvents,
-    avgPageViewsPerSession: uniqueVisitors > 0 ? totalPageViews / uniqueVisitors : 0
+    totalActions,
+    totalEvents: events.length,
+    avgPageViewsPerVisitor: uniqueVisitors > 0 ? totalPageViews / uniqueVisitors : 0
   };
 }
 ```
@@ -74,59 +102,55 @@ async function getBusinessActions(websiteId: string) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Phone calls
-  const phoneCallsSnapshot = await db
+  // Get all tap events from last 30 days
+  const tapsSnapshot = await db
     .collection(`analytics/${websiteId}/events`)
-    .where('eventType', '==', 'phone_click')
+    .where('type', '==', 'tap')
     .where('timestamp', '>=', thirtyDaysAgo)
     .get();
 
-  // Email contacts
-  const emailsSnapshot = await db
-    .collection(`analytics/${websiteId}/events`)
-    .where('eventType', '==', 'email_click')
-    .where('timestamp', '>=', thirtyDaysAgo)
-    .get();
-
-  // Form submissions
-  const formsSnapshot = await db
-    .collection(`analytics/${websiteId}/events`)
-    .where('eventType', '==', 'form_submit')
-    .where('timestamp', '>=', thirtyDaysAgo)
-    .get();
+  const taps = tapsSnapshot.docs.map(doc => doc.data());
+  
+  // Count different action types
+  const phoneCalls = taps.filter(tap => tap.metadata?.action === 'phone_click').length;
+  const emails = taps.filter(tap => tap.metadata?.action === 'email_click').length;
+  const formSubmissions = taps.filter(tap => tap.metadata?.action === 'form_submit').length;
+  const externalLinks = taps.filter(tap => tap.metadata?.action === 'external_link_click').length;
 
   return {
-    phoneCalls: phoneCallsSnapshot.size,
-    emails: emailsSnapshot.size,
-    formSubmissions: formsSnapshot.size,
-    totalLeads: phoneCallsSnapshot.size + emailsSnapshot.size + formsSnapshot.size
+    phoneCalls,
+    emails,
+    formSubmissions,
+    externalLinks,
+    totalLeads: phoneCalls + emails + formSubmissions,
+    totalTaps: taps.length
   };
 }
 ```
 
-#### 3. Source Analysis (Where Actions Come From)
+#### 3. Page Analysis (Where Actions Come From)
 
 ```typescript
-async function getActionsBySource(websiteId: string) {
+async function getActionsByPage(websiteId: string) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const eventsSnapshot = await db
+  const tapsSnapshot = await db
     .collection(`analytics/${websiteId}/events`)
-    .where('type', '==', 'tap') // Only tap events for actions
+    .where('type', '==', 'tap')
     .where('timestamp', '>=', thirtyDaysAgo)
     .get();
 
-  const sourceBreakdown: Record<string, number> = {};
+  const pageBreakdown: Record<string, number> = {};
   
-  eventsSnapshot.forEach(doc => {
+  tapsSnapshot.forEach(doc => {
     const data = doc.data();
-    const source = data.source || 'unknown';
-    sourceBreakdown[source] = (sourceBreakdown[source] || 0) + 1;
+    const page = data.path || 'unknown';
+    pageBreakdown[page] = (pageBreakdown[page] || 0) + 1;
   });
 
-  return sourceBreakdown;
-  // Example result: { "home_screen": 45, "contact_page": 23, "header": 12 }
+  return pageBreakdown;
+  // Example result: { "/": 45, "/contact": 23, "/about": 12 }
 }
 ```
 
@@ -137,28 +161,39 @@ async function getVisitorDemographics(websiteId: string) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const sessionsSnapshot = await db
-    .collection(`analytics/${websiteId}/sessions`)
-    .where('startTime', '>=', thirtyDaysAgo)
+  // Get all events to analyze visitor patterns
+  const eventsSnapshot = await db
+    .collection(`analytics/${websiteId}/events`)
+    .where('timestamp', '>=', thirtyDaysAgo)
     .get();
+
+  const events = eventsSnapshot.docs.map(doc => doc.data());
+  
+  // Use unique IP hashes to avoid counting same visitor multiple times
+  const uniqueVisitors = new Map();
+  
+  events.forEach(event => {
+    const ipHash = event.ipHash;
+    if (!uniqueVisitors.has(ipHash)) {
+      uniqueVisitors.set(ipHash, event); // Store first event for each visitor
+    }
+  });
 
   const deviceTypes: Record<string, number> = {};
   const browsers: Record<string, number> = {};
   const countries: Record<string, number> = {};
 
-  sessionsSnapshot.forEach(doc => {
-    const data = doc.data();
-    
+  uniqueVisitors.forEach(event => {
     // Device breakdown
-    const deviceType = data.device?.type || 'unknown';
+    const deviceType = event.device?.type || 'unknown';
     deviceTypes[deviceType] = (deviceTypes[deviceType] || 0) + 1;
     
     // Browser breakdown
-    const browser = data.device?.browser || 'unknown';
+    const browser = event.device?.browser || 'unknown';
     browsers[browser] = (browsers[browser] || 0) + 1;
     
     // Country breakdown
-    const country = data.location?.country || 'unknown';
+    const country = event.location?.country || 'unknown';
     countries[country] = (countries[country] || 0) + 1;
   });
 
@@ -173,12 +208,6 @@ async function getDailyMetrics(websiteId: string, days: number = 30) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const pageViewsSnapshot = await db
-    .collection(`analytics/${websiteId}/pageviews`)
-    .where('timestamp', '>=', startDate)
-    .orderBy('timestamp')
-    .get();
-
   const eventsSnapshot = await db
     .collection(`analytics/${websiteId}/events`)
     .where('timestamp', '>=', startDate)
@@ -186,20 +215,23 @@ async function getDailyMetrics(websiteId: string, days: number = 30) {
     .get();
 
   // Group by day
-  const dailyData: Record<string, { pageViews: number; events: number }> = {};
-
-  pageViewsSnapshot.forEach(doc => {
-    const data = doc.data();
-    const day = data.timestamp.toDate().toISOString().split('T')[0];
-    if (!dailyData[day]) dailyData[day] = { pageViews: 0, events: 0 };
-    dailyData[day].pageViews++;
-  });
+  const dailyData: Record<string, { impressions: number; taps: number; totalEvents: number }> = {};
 
   eventsSnapshot.forEach(doc => {
     const data = doc.data();
     const day = data.timestamp.toDate().toISOString().split('T')[0];
-    if (!dailyData[day]) dailyData[day] = { pageViews: 0, events: 0 };
-    dailyData[day].events++;
+    
+    if (!dailyData[day]) {
+      dailyData[day] = { impressions: 0, taps: 0, totalEvents: 0 };
+    }
+    
+    dailyData[day].totalEvents++;
+    
+    if (data.type === 'impression') {
+      dailyData[day].impressions++;
+    } else if (data.type === 'tap') {
+      dailyData[day].taps++;
+    }
   });
 
   return dailyData;
@@ -213,46 +245,39 @@ async function getPopularPages(websiteId: string) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const pageViewsSnapshot = await db
-    .collection(`analytics/${websiteId}/pageviews`)
+  // Get all impression events (page views)
+  const impressionsSnapshot = await db
+    .collection(`analytics/${websiteId}/events`)
+    .where('type', '==', 'impression')
     .where('timestamp', '>=', thirtyDaysAgo)
     .get();
 
   const pageStats: Record<string, { 
     views: number; 
-    avgTimeOnPage: number; 
-    totalTime: number;
-    avgScrollDepth: number;
-    totalScrollDepth: number;
+    initialLoads: number;
+    routeChanges: number;
   }> = {};
 
-  pageViewsSnapshot.forEach(doc => {
+  impressionsSnapshot.forEach(doc => {
     const data = doc.data();
-    // Extract just the path from full URL for cleaner display
-    const url = new URL(data.url).pathname; // "/", "/contact", "/about"
-    const timeOnPage = data.timeOnPage || 0;
-    const scrollDepth = data.scrollDepth || 0;
+    const path = data.path; // Already just the path (/contact, /, /about)
+    const isInitialLoad = data.metadata?.isInitialLoad || false;
 
-    if (!pageStats[url]) {
-      pageStats[url] = { 
+    if (!pageStats[path]) {
+      pageStats[path] = { 
         views: 0, 
-        avgTimeOnPage: 0, 
-        totalTime: 0,
-        avgScrollDepth: 0,
-        totalScrollDepth: 0
+        initialLoads: 0,
+        routeChanges: 0
       };
     }
 
-    pageStats[url].views++;
-    pageStats[url].totalTime += timeOnPage;
-    pageStats[url].totalScrollDepth += scrollDepth;
-  });
-
-  // Calculate averages
-  Object.keys(pageStats).forEach(url => {
-    const stats = pageStats[url];
-    stats.avgTimeOnPage = stats.views > 0 ? stats.totalTime / stats.views : 0;
-    stats.avgScrollDepth = stats.views > 0 ? stats.totalScrollDepth / stats.views : 0;
+    pageStats[path].views++;
+    
+    if (isInitialLoad) {
+      pageStats[path].initialLoads++;
+    } else {
+      pageStats[path].routeChanges++;
+    }
   });
 
   // Sort by views (most popular first)
@@ -266,99 +291,93 @@ async function getPopularPages(websiteId: string) {
   return sortedPages;
 }
 
-// Get specific page performance
-async function getPagePerformance(websiteId: string, pagePath: string) {
+// Get taps (actions) per page
+async function getPageActions(websiteId: string) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const pageViewsSnapshot = await db
-    .collection(`analytics/${websiteId}/pageviews`)
+  const tapsSnapshot = await db
+    .collection(`analytics/${websiteId}/events`)
+    .where('type', '==', 'tap')
     .where('timestamp', '>=', thirtyDaysAgo)
     .get();
 
-  const pageViews = pageViewsSnapshot.docs
-    .map(doc => doc.data())
-    .filter(data => new URL(data.url).pathname === pagePath);
+  const pageActions: Record<string, number> = {};
 
-  const totalViews = pageViews.length;
-  const avgTimeOnPage = totalViews > 0 
-    ? pageViews.reduce((sum, view) => sum + (view.timeOnPage || 0), 0) / totalViews 
-    : 0;
-  const avgScrollDepth = totalViews > 0
-    ? pageViews.reduce((sum, view) => sum + (view.scrollDepth || 0), 0) / totalViews
-    : 0;
-  const exitRate = totalViews > 0
-    ? pageViews.filter(view => view.exitPage).length / totalViews
-    : 0;
+  tapsSnapshot.forEach(doc => {
+    const data = doc.data();
+    const path = data.path;
+    pageActions[path] = (pageActions[path] || 0) + 1;
+  });
 
-  return {
-    path: pagePath,
-    views: totalViews,
-    avgTimeOnPage: Math.round(avgTimeOnPage / 1000), // Convert to seconds
-    avgScrollDepth: Math.round(avgScrollDepth),
-    exitRate: Math.round(exitRate * 100) // As percentage
-  };
+  return pageActions;
 }
 ```
 
-## Event Type Filtering
+## Simple Event Filtering
 
-Use the enum values for precise filtering:
+Only two event types to work with:
 
-### Source Values
-- `home_screen`, `contact_page`, `about_page`, `services_page`
-- `header`, `footer`, `sidebar`, `hero_section`
-- `modal`, `cta_section`, `testimonials_section`
+### Event Types
+- `impression` - Page views (automatic on URL changes)
+- `tap` - User actions (clicks, form submissions)
 
-### EventType Values  
-- `impression` - Content views/visibility
-- `tap` - Button clicks, link clicks
-- `submit` - Form submissions
-- `view`, `scroll`, `download`, `share`
+### Common Queries
 
 ```typescript
-// Get all CTA button clicks from hero sections
-const heroCtaClicks = await db
-  .collection(`analytics/${websiteId}/events`)
-  .where('source', '==', 'hero_section')
-  .where('type', '==', 'tap')
-  .where('eventType', '==', 'cta_click')
-  .get();
-
-// Get all content impressions
+// Get all page impressions (page views)
 const impressions = await db
   .collection(`analytics/${websiteId}/events`)
   .where('type', '==', 'impression')
+  .where('timestamp', '>=', thirtyDaysAgo)
   .get();
 
-// Get page navigation flow (route changes)
-const pageImpressions = await db
+// Get all business actions
+const taps = await db
   .collection(`analytics/${websiteId}/events`)
-  .where('eventType', '==', 'page_impression')
+  .where('type', '==', 'tap')
   .where('timestamp', '>=', thirtyDaysAgo)
-  .orderBy('timestamp')
+  .get();
+
+// Get phone calls specifically
+const phoneCalls = await db
+  .collection(`analytics/${websiteId}/events`)
+  .where('type', '==', 'tap')
+  .where('metadata.action', '==', 'phone_click')
+  .where('timestamp', '>=', thirtyDaysAgo)
+  .get();
+
+// Get initial page loads vs route changes
+const initialLoads = await db
+  .collection(`analytics/${websiteId}/events`)
+  .where('type', '==', 'impression')
+  .where('metadata.isInitialLoad', '==', true)
+  .where('timestamp', '>=', thirtyDaysAgo)
   .get();
 ```
 
 ## Dashboard Metrics to Display
 
 ### Key Performance Indicators
-1. **Total Visitors** (unique sessions)
-2. **Page Views** (total pageviews)
-3. **Business Leads** (phone + email + form submissions)
-4. **Conversion Rate** (leads / visitors)
+1. **Total Visitors** (unique IP hashes)
+2. **Page Views** (impression events)
+3. **Business Actions** (tap events)
+4. **Top Pages** (impressions by path)
+5. **Action Rate** (taps / impressions)
 
 ### Charts & Visualizations
-1. **Daily Traffic Chart** (visitors over time)
-2. **Source Breakdown** (where leads come from)
-3. **Device Types** (mobile vs desktop)
-4. **Popular Pages** (most visited pages)
-5. **Lead Actions Timeline** (recent business actions)
+1. **Daily Traffic Chart** (impressions + taps over time)
+2. **Page Breakdown** (which pages get most views/actions)
+3. **Device Types** (mobile vs desktop visitors)
+4. **Action Types** (phone calls vs emails vs forms)
+5. **Entry vs Navigation** (initial loads vs route changes)
 
-### Real-time Features
-- Recent visitor activity
-- Live lead notifications
-- Today's metrics vs yesterday
+### Business Insights
+- **Phone Calls** - Count of phone_click taps
+- **Email Contacts** - Count of email_click taps  
+- **Form Submissions** - Count of form_submit taps
+- **Popular Entry Points** - Pages with most initial loads
+- **High-Action Pages** - Pages with best tap/impression ratio
 
 ## Example Dashboard Query Function
 
@@ -367,29 +386,56 @@ export async function getDashboardData(websiteId: string) {
   const [
     basicMetrics,
     businessActions,
-    sourceBreakdown,
+    pageBreakdown,
     demographics,
     dailyMetrics,
-    popularPages
+    popularPages,
+    pageActions
   ] = await Promise.all([
     getBasicMetrics(websiteId),
     getBusinessActions(websiteId),
-    getActionsBySource(websiteId),
+    getActionsByPage(websiteId),
     getVisitorDemographics(websiteId),
     getDailyMetrics(websiteId),
-    getPopularPages(websiteId)
+    getPopularPages(websiteId),
+    getPageActions(websiteId)
   ]);
 
   return {
     basicMetrics,
     businessActions,
-    sourceBreakdown,
+    pageBreakdown,
     demographics,
     dailyMetrics,
     popularPages,
+    pageActions,
     lastUpdated: new Date()
   };
 }
 ```
 
-This structure provides comprehensive analytics while maintaining the separation between website tracking (write-only) and dashboard viewing (admin read-only).
+## Quick Reference
+
+### Event Structure
+```javascript
+{
+  type: 'impression' | 'tap',
+  path: '/contact',                    // URL path
+  metadata: {
+    action: 'phone_click',             // For taps
+    isInitialLoad: true,               // For impressions
+    phone: '+1234567890'               // Custom data
+  },
+  device: { type, browser, os },
+  location: { country, city, timezone },
+  timestamp: firestore_timestamp
+}
+```
+
+### Key Queries
+- **Impressions**: `where('type', '==', 'impression')`
+- **Actions**: `where('type', '==', 'tap')`
+- **Phone calls**: `where('metadata.action', '==', 'phone_click')`
+- **Initial loads**: `where('metadata.isInitialLoad', '==', true)`
+
+This simplified structure makes dashboard development straightforward while providing all essential business metrics!

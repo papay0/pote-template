@@ -3,52 +3,25 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAnalytics } from '@/lib/useAnalytics';
-import { Source, EventType } from '@/lib/analytics-types';
 
 interface AnalyticsProviderProps {
-  websiteId: string;
   children: React.ReactNode;
 }
 
-// Map page paths to appropriate sources
-function getSourceFromPath(pathname: string): Source {
-  if (pathname === '/') return Source.HomeScreen;
-  if (pathname.includes('/contact')) return Source.ContactPage;
-  if (pathname.includes('/about')) return Source.AboutPage;
-  if (pathname.includes('/services')) return Source.ServicesPage;
-  if (pathname.includes('/products')) return Source.ProductPage;
-  if (pathname.includes('/checkout')) return Source.CheckoutPage;
-  if (pathname.includes('/login')) return Source.LoginPage;
-  if (pathname.includes('/signup')) return Source.SignupPage;
-  if (pathname.includes('/dashboard')) return Source.Dashboard;
-  if (pathname.includes('/profile')) return Source.ProfilePage;
-  if (pathname.includes('/settings')) return Source.SettingsPage;
-  if (pathname.includes('/blog')) return Source.BlogPost;
-  if (pathname.includes('/search')) return Source.SearchResults;
-  
-  // Default fallback for unknown routes
-  return Source.Unknown;
-}
-
-export function AnalyticsProvider({ websiteId, children }: AnalyticsProviderProps) {
-  const { logEvent } = useAnalytics(websiteId);
+export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
+  const { logImpression, logTap } = useAnalytics();
   const pathname = usePathname();
-  const previousPath = useRef<string>('');
+  const isInitialLoad = useRef(true);
 
-  // Track route changes for automatic page impressions
+  // Track route changes and initial load for automatic page impressions
   useEffect(() => {
-    // Only log if this is a different page (not initial load)
-    if (previousPath.current && previousPath.current !== pathname) {
-      const source = getSourceFromPath(pathname);
-      logEvent('page_impression', source, EventType.Impression, {
-        from: previousPath.current,
-        to: pathname,
-        // Include the actual pathname for unknown routes
-        pathname: source === Source.Unknown ? pathname : undefined
-      });
-    }
-    previousPath.current = pathname;
-  }, [pathname, logEvent]);
+    // Log impression for both initial load and route changes
+    logImpression(pathname, {
+      isInitialLoad: isInitialLoad.current
+    });
+    
+    isInitialLoad.current = false;
+  }, [pathname, logImpression]);
 
   useEffect(() => {
     // Add click event listeners for common business actions
@@ -62,18 +35,18 @@ export function AnalyticsProvider({ websiteId, children }: AnalyticsProviderProp
         // Track phone clicks
         if (href.startsWith('tel:')) {
           const phone = href.replace('tel:', '');
-          logEvent('phone_click', Source.ContactPage, EventType.Tap, { phone });
+          logTap('phone_click', { phone });
         }
         
         // Track email clicks
         if (href.startsWith('mailto:')) {
           const email = href.replace('mailto:', '');
-          logEvent('email_click', Source.ContactPage, EventType.Tap, { email });
+          logTap('email_click', { email });
         }
         
         // Track external link clicks
         if (href.startsWith('http') && !href.includes(window.location.hostname)) {
-          logEvent('external_link_click', Source.HomeScreen, EventType.Tap, { url: href });
+          logTap('external_link_click', { url: href });
         }
       }
       
@@ -81,7 +54,7 @@ export function AnalyticsProvider({ websiteId, children }: AnalyticsProviderProp
       if ((target as HTMLInputElement).type === 'submit' || target.closest('button[type="submit"]')) {
         const form = target.closest('form');
         if (form) {
-          logEvent('form_submit', Source.ContactPage, EventType.Submit, { 
+          logTap('form_submit', { 
             formName: form.getAttribute('name') || 'unnamed_form',
             formId: form.id || undefined
           });
@@ -94,7 +67,7 @@ export function AnalyticsProvider({ websiteId, children }: AnalyticsProviderProp
     return () => {
       document.removeEventListener('click', handleClick);
     };
-  }, [logEvent]);
+  }, [logTap]);
 
   return <>{children}</>;
 }

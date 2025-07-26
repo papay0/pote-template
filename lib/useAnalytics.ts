@@ -2,42 +2,35 @@
 
 import { useEffect, useRef } from 'react';
 import { PoteAnalytics } from './analytics';
-import { Source, EventType } from './analytics-types';
 
 let analyticsInstance: PoteAnalytics | null = null;
 
-export function useAnalytics(websiteId: string) {
+export function useAnalytics() {
   const analyticsRef = useRef<PoteAnalytics | null>(null);
 
   useEffect(() => {
     // Only initialize on client side and if not already initialized
-    if (typeof window !== 'undefined' && !analyticsInstance && websiteId) {
-      analyticsInstance = new PoteAnalytics(websiteId);
+    if (typeof window !== 'undefined' && !analyticsInstance) {
+      analyticsInstance = new PoteAnalytics();
       analyticsRef.current = analyticsInstance;
     }
-  }, [websiteId]);
+  }, []);
 
-  const logEvent = (
-    eventType: string, 
-    source: Source, 
-    type: EventType, 
-    metadata: Record<string, unknown> = {}
-  ) => {
+  const logImpression = (path?: string, metadata?: Record<string, unknown>) => {
     if (analyticsInstance) {
-      analyticsInstance.logEvent(eventType, source, type, metadata);
+      analyticsInstance.logImpression(path, metadata);
     }
   };
 
-
-  const logPageView = () => {
+  const logTap = (action: string, metadata?: Record<string, unknown>) => {
     if (analyticsInstance) {
-      analyticsInstance.logPageView();
+      analyticsInstance.logTap(action, metadata);
     }
   };
 
   return {
-    logEvent,
-    logPageView,
+    logImpression,
+    logTap,
     analytics: analyticsInstance
   };
 }

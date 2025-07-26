@@ -33,7 +33,7 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <AnalyticsProvider websiteId={process.env.NEXT_PUBLIC_WEBSITE_ID || ""}>
+            <AnalyticsProvider>
               <LayoutMetadata />
               {children}
             </AnalyticsProvider>
